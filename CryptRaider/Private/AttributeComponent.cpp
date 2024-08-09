@@ -23,6 +23,11 @@ void UAttributeComponent::UseHealingPotion()
 	}
 }
 
+void UAttributeComponent::ReduceStamina(float DeltaTime)
+{
+	UseStamina(RunCost * DeltaTime);
+}
+
 
 // Called when the game starts
 void UAttributeComponent::BeginPlay()
@@ -77,6 +82,8 @@ void UAttributeComponent::AddHealingPotion(int32 AmountOfHealingPotion)
 {
 	HealingPotion += AmountOfHealingPotion;
 }
+
+
 
 void UAttributeComponent::UseStamina(float StaminaCost)
 {

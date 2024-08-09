@@ -99,6 +99,7 @@ void AEnemy::CheckCombatTarget()
 void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 {
 	Super::GetHit_Implementation(ImpactPoint, Hitter);
+	/*UE_LOG(LogTemp, Warning, TEXT("GetHit_Implementation called"));*/
 	if (!IsDead()) {
 		ShowHealthBar();
 	}

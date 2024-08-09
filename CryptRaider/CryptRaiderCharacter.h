@@ -6,6 +6,7 @@
 #include "Logging/LogMacros.h"
 #include"public/Characters/BaseCharacter.h"
 #include "Interfaces/PickupInterface.h"
+#include "Components/BoxComponent.h"
 #include "CryptRaiderCharacter.generated.h"
 
 
@@ -184,6 +185,11 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
 	UAnimMontage* EquipMontage;
 
+	UPROPERTY(VisibleAnywhere, Category = "Combat")
+	UBoxComponent* KickBox;
+
+	UFUNCTION()
+	void OnKickHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 
 	virtual bool CanAttack() override;
@@ -196,6 +202,9 @@ private:
 	bool IsUnoccupied();
 	void SetHUDHealth();
 
+	void SetupKickCollision();
+	void EnableKickCollision();
+	void DisableKickCollision();
 public:
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
 	FORCEINLINE EActionState GetActionState() const { return ActionState; }

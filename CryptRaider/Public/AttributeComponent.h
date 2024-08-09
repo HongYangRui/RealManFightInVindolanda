@@ -16,6 +16,7 @@ public:
 	// Sets default values for this component's properties
 	UAttributeComponent();
 	void UseHealingPotion();
+	void ReduceStamina(float DeltaTime);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -42,7 +43,7 @@ private:
 	int32 Gold;
 
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
-	int32 Souls;
+	int32 Souls=5;
 
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
 	int32 HealingPotion=3;
@@ -52,6 +53,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
 	float StaminaRegenRate = 8.f;
+
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	float RunCost = 18.f;
 
 public:
 	bool ReceiveDamage(float Damage);

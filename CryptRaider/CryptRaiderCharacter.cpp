@@ -23,6 +23,8 @@
 #include "Items/Soul.h"
 #include "Items/Treasure.h"
 #include "Items/HealingPotion.h"
+#include <Kismet/GameplayStatics.h>
+
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 // ACryptRaiderCharacter
@@ -69,11 +71,21 @@ ACryptRaiderCharacter::ACryptRaiderCharacter()
 
 
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
+
+	KickBox = CreateDefaultSubobject<UBoxComponent>(TEXT("KickBox"));
+	KickBox->SetupAttachment(GetMesh(), FName("RightLegSocket"));
+	KickBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	KickBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	KickBox->SetCollisionResponseToChannel(ECC_Pawn, ECollisionResponse::ECR_Overlap);
 }
 
 void ACryptRaiderCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (bIsRunning && Attributes)
+	{
+		Attributes->ReduceStamina(DeltaTime);
+	}
 	if (Attributes && PlayerOverlay)
 	{
 		Attributes->RegenStamina(DeltaTime);
@@ -85,6 +97,11 @@ void ACryptRaiderCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+	SetupKickCollision();
+	if (KickBox && !KickBox->OnComponentBeginOverlap.IsAlreadyBound(this, &ACryptRaiderCharacter::OnKickHit))
+	{
+		KickBox->OnComponentBeginOverlap.AddDynamic(this, &ACryptRaiderCharacter::OnKickHit);
+	}
 	Tags.Add(FName("EngageableTarget"));
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -383,6 +400,7 @@ void ACryptRaiderCharacter::Kick()
 	{
 		PlayKickMontage();
 		ActionState = EActionState::EAS_Kicking;
+		EnableKickCollision();
 	}
 }
 
@@ -428,6 +446,7 @@ void ACryptRaiderCharacter::SetHUDHealth()
 void ACryptRaiderCharacter::KickEnd()
 {
 	ActionState = EActionState::EAS_Unoccupied;
+	DisableKickCollision();
 }
 
 void ACryptRaiderCharacter::PlayKickMontage()
@@ -621,4 +640,51 @@ void ACryptRaiderCharacter::Jump()
 		Super::Jump();
 	}
 
+}
+
+
+void ACryptRaiderCharacter::SetupKickCollision()
+{
+	if (KickBox)
+	{
+		KickBox->OnComponentBeginOverlap.AddDynamic(this, &ACryptRaiderCharacter::OnKickHit);
+	}
+}
+
+void ACryptRaiderCharacter::EnableKickCollision()
+{
+	if (KickBox)
+	{
+		KickBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+}
+
+void ACryptRaiderCharacter::DisableKickCollision()
+{
+	if (KickBox)
+	{
+		KickBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+void ACryptRaiderCharacter::OnKickHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor && OtherActor != this && OtherComponent)
+	{
+		/*UE_LOG(LogTemp, Log, TEXT("Kicked: %s"), *OtherActor->GetName());*/
+		float KickDamage = 15.0f; // Adjust damage value as needed
+
+		UGameplayStatics::ApplyDamage(
+			OtherActor,
+			KickDamage,
+			GetInstigatorController(),
+			this,
+			UDamageType::StaticClass()
+		);
+		if (OtherActor->GetClass()->ImplementsInterface(UHitInterface::StaticClass()))
+		{
+			IHitInterface::Execute_GetHit(OtherActor, SweepResult.ImpactPoint, this);
+		}
+		/*UE_LOG(LogTemp, Log, TEXT("Damage Applied: %f to %s"), KickDamage, *OtherActor->GetName());*/
+	}
 }
