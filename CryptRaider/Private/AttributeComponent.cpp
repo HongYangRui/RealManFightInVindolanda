@@ -95,3 +95,15 @@ float UAttributeComponent::GetStaminaPercent()
 	return Stamina / MaxStamina;
 }
 
+bool UAttributeComponent::PurchasePotion(int32 Cost, int32 PotionAmount)
+{
+	if (Gold >= Cost)
+	{
+		Gold -= Cost;
+		HealingPotion += PotionAmount;
+		return true;
+		
+	}
+	return false;
+}
+

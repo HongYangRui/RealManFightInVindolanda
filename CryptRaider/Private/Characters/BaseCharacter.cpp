@@ -34,6 +34,7 @@ void ABaseCharacter::Attack()
 
 void ABaseCharacter::Die()
 {
+	if (Tags.Contains(FName("Dead"))) return;
 	Tags.Add(FName("Dead"));
 	PlayDeathMontage();
 }

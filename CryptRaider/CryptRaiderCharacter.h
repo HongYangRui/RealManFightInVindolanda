@@ -7,6 +7,7 @@
 #include"public/Characters/BaseCharacter.h"
 #include "Interfaces/PickupInterface.h"
 #include "Components/BoxComponent.h"
+#include"AttributeComponent.h"
 #include "CryptRaiderCharacter.generated.h"
 
 
@@ -208,5 +209,22 @@ private:
 public:
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
 	FORCEINLINE EActionState GetActionState() const { return ActionState; }
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	int32 GetGoldFromAttributes() const;
+	UFUNCTION(BlueprintCallable)
+	void BuyHealingPotion(int32 Cost, int32 PotionAmount);
+	UFUNCTION(BlueprintCallable)
+	void Respawn();
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes", meta = (AllowPrivateAccess = "true"))
+	UAttributeComponent* AttributeComponent;
+
+
+	void ShowRespawnWidget();
+	void HideRespawnWidget();
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> DieRespawnWidgetClass;
+	UPROPERTY()
+	UUserWidget* DieRespawnWidget;
 };
 

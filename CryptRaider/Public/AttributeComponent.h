@@ -25,19 +25,19 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void RegenStamina(float DeltaTime);
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	float Health = 100;
 
-private:
-	UPROPERTY(EditAnywhere,Category="Actor Attributes")
-	float Health=100;
-
-	UPROPERTY(EditAnywhere,Category="Actor Attributes")
-	float MaxHealth=100;
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	float MaxHealth = 100;
 	// Current Stamina
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
-	float Stamina=100;
+	float Stamina = 100;
 
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
-	float MaxStamina=100;
+	float MaxStamina = 100;
+private:
+	
 
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
 	int32 Gold;
@@ -64,6 +64,7 @@ public:
 	void AddSouls(int32 NumberOfSouls);
 	void AddGold(int32 AmountOfGold);
 	void AddHealingPotion(int32 AmountOfHealingPotion);
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
 	FORCEINLINE int32 GetGold() const { return Gold; }
 	FORCEINLINE int32 GetSouls() const { return Souls; }
 	FORCEINLINE int32 GetHealingPotion() const { return HealingPotion; }
@@ -71,4 +72,6 @@ public:
 	float GetStaminaPercent();
 	FORCEINLINE float GetDodgeCost() const { return DodgeCost; }
 	FORCEINLINE float GetStamina() const { return Stamina; }
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	bool PurchasePotion(int32 Cost, int32 PotionAmount);
 };

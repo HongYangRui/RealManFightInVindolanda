@@ -21,6 +21,9 @@ void UTriggerComponent::BeginPlay()
 void UTriggerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (Mover == nullptr) {
+		return;
+	}
 	AActor* Actor= GetAcceptableActor();
 	if (Actor!=nullptr) {
 		UPrimitiveComponent* Component=Cast<UPrimitiveComponent>(Actor->GetRootComponent());

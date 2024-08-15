@@ -23,6 +23,7 @@
 #include "Items/Soul.h"
 #include "Items/Treasure.h"
 #include "Items/HealingPotion.h"
+#include "GameFramework/PlayerStart.h"
 #include <Kismet/GameplayStatics.h>
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -506,6 +507,7 @@ void ACryptRaiderCharacter::Die()
 	{
 		AnimInstance->IsDead = true;
 	}
+	ShowRespawnWidget(); // Call the function to display the respawn widget
 }
 
 bool ACryptRaiderCharacter::HasEnoughStamina()
@@ -686,5 +688,121 @@ void ACryptRaiderCharacter::OnKickHit(UPrimitiveComponent* OverlappedComponent, 
 			IHitInterface::Execute_GetHit(OtherActor, SweepResult.ImpactPoint, this);
 		}
 		/*UE_LOG(LogTemp, Log, TEXT("Damage Applied: %f to %s"), KickDamage, *OtherActor->GetName());*/
+	}
+}
+
+
+int32 ACryptRaiderCharacter::GetGoldFromAttributes() const
+{
+	return Attributes->GetGold();
+}
+
+
+void ACryptRaiderCharacter::BuyHealingPotion(int32 Cost, int32 PotionAmount)
+{
+	if (Attributes)
+	{
+		if (Attributes->PurchasePotion(Cost, PotionAmount))
+		{
+			if (PlayerOverlay)
+			{
+				PlayerOverlay->SetGold(Attributes->GetGold());
+				PlayerOverlay->SetHealingPotion(Attributes->GetHealingPotion());
+			}
+		}
+	}
+}
+
+
+void ACryptRaiderCharacter::Respawn()
+{
+	// Reset animation state
+	UCryptRaiderAnimInstance* AnimInstance = Cast<UCryptRaiderAnimInstance>(GetMesh()->GetAnimInstance());
+	if (AnimInstance)
+	{
+		AnimInstance->IsDead = false;
+	}
+
+
+	// Find the PlayerStart actor in the level
+	APlayerStart* PlayerStart = nullptr;
+	TArray<AActor*> PlayerStartActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStartActors);
+
+	if (PlayerStartActors.Num() > 0)
+	{
+		PlayerStart = Cast<APlayerStart>(PlayerStartActors[0]);  // Assuming the first PlayerStart is the one you want
+	}
+
+	if (PlayerStart)
+	{
+		// Set the respawn location to PlayerStart's location
+		FVector SpawnLocation = PlayerStart->GetActorLocation();
+		SetActorLocation(SpawnLocation);
+	}
+	// Reset character state
+	ActionState = EActionState::EAS_Unoccupied;
+	CharacterState = ECharacterState::ECS_Unequipped;
+
+	// Reset health and other attributes
+	if (Attributes)
+	{
+		Attributes->Health = Attributes->MaxHealth;
+		Attributes->Stamina = Attributes->MaxStamina;
+	}
+
+	// Re-enable collision and physics
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetMesh()->SetSimulatePhysics(false);
+
+
+	// Update HUD or other UI elements
+	if (PlayerOverlay)
+	{
+		PlayerOverlay->SetHealthBarPercent(Attributes->GetHealthPercent());
+		PlayerOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+	}
+	Tags.Remove(FName("Dead"));
+	HideRespawnWidget(); // Hide the respawn widget after respawning
+}
+
+void ACryptRaiderCharacter::ShowRespawnWidget()
+{
+	// Assuming you have a reference to the DieRespawn Widget Blueprint
+	if (!DieRespawnWidget && DieRespawnWidgetClass)
+	{
+		DieRespawnWidget = CreateWidget<UUserWidget>(GetWorld(), DieRespawnWidgetClass);
+		if (DieRespawnWidget)
+		{
+			DieRespawnWidget->AddToViewport();
+			// Optionally, set input mode to UI only, to ensure the player can interact with the widget
+			APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+			FInputModeUIOnly InputModeData;
+			InputModeData.SetWidgetToFocus(DieRespawnWidget->TakeWidget());
+			PlayerController->SetInputMode(InputModeData);
+			PlayerController->bShowMouseCursor = true;
+		}
+	}
+}
+
+void ACryptRaiderCharacter::HideRespawnWidget()
+{
+	if (DieRespawnWidget)
+	{
+		// Hide the respawn widget from the viewport
+		DieRespawnWidget->RemoveFromViewport();
+
+		// Reset the player controller's input mode back to game-only mode
+		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+		if (PlayerController)
+		{
+			FInputModeGameOnly InputModeData;
+			PlayerController->SetInputMode(InputModeData);
+			PlayerController->bShowMouseCursor = false;
+		}
+
+		// Set DieRespawnWidget to null since it¡¯s no longer valid after removal
+		DieRespawnWidget = nullptr;
 	}
 }
