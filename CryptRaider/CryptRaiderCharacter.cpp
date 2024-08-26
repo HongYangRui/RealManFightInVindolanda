@@ -83,7 +83,7 @@ ACryptRaiderCharacter::ACryptRaiderCharacter()
 void ACryptRaiderCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (bIsRunning && Attributes)
+	/*if (bIsRunning && Attributes)
 	{
 		Attributes->ReduceStamina(DeltaTime);
 	}
@@ -91,6 +91,35 @@ void ACryptRaiderCharacter::Tick(float DeltaTime)
 	{
 		Attributes->RegenStamina(DeltaTime);
 		PlayerOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+	}*/
+	if (Attributes)
+	{
+		if (bIsRunning)
+		{
+			Attributes->ReduceStamina(DeltaTime);
+
+			// 如果耐力接近0，逐渐减少速度
+			if (Attributes->GetStaminaPercent() <= 0.1f) // 耐力接近0时
+			{
+				float NewSpeed = FMath::Lerp(GetCharacterMovement()->MaxWalkSpeed, 300.0f, 0.1f); // 逐渐减少到行走速度
+				GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+
+				if (Attributes->GetStaminaPercent() <= 0.0f)
+				{
+					bIsRunning = false; // 设置为行走状态
+					GetCharacterMovement()->MaxWalkSpeed = 300.0f; // 确保完全恢复到行走速度
+				}
+			}
+		}
+		else
+		{
+			Attributes->RegenStamina(DeltaTime);
+		}
+
+		if (PlayerOverlay)
+		{
+			PlayerOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+		}
 	}
 }
 
@@ -742,7 +771,7 @@ void ACryptRaiderCharacter::Respawn()
 	}
 	// Reset character state
 	ActionState = EActionState::EAS_Unoccupied;
-	CharacterState = ECharacterState::ECS_Unequipped;
+	CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
 
 	// Reset health and other attributes
 	if (Attributes)
